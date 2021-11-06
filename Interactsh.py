@@ -8,28 +8,21 @@ import base64
 import json
 import codecs
 import random
-
-import Crypto
-import rsa
 import requests
 from uuid import uuid4
-
 from Cryptodome.Cipher import AES
 from Cryptodome.Hash import SHA256
 from xid import XID
 from base64 import b64encode
 from Crypto import Random
 from Crypto.PublicKey import RSA
-from Crypto.Hash import SHA
-from Crypto.Signature import PKCS1_v1_5 as PKCS1_signature
-from Crypto.Cipher import PKCS1_v1_5 as PKCS1_cipher, PKCS1_OAEP
-
-guid = XID()
+from Crypto.Cipher import PKCS1_OAEP
 
 
 class Interactsh:
     def __init__(self):
         random_generator = Random.new().read
+        guid = XID()
         rsa = RSA.generate(2048, random_generator)
         self.public_key = rsa.publickey().exportKey()
         self.private_key = rsa.exportKey()
@@ -39,9 +32,6 @@ class Interactsh:
         self.secret = str(uuid4())
         self.encoded = b64encode(self.public_key).decode("utf8")
         self.correlation_id = guid.string()
-
-        print(self.secret)
-        print(self.correlation_id)
         self.Register()
 
     def Register(self):
@@ -59,7 +49,7 @@ class Interactsh:
     def Poll(self):
         try:
             result = []
-            protocol_list = []
+            protocol_list = set()
             url = f"https://interactsh.com/poll?id={self.correlation_id}&secret={self.secret}"
             resp2 = requests.get(url)
             reps2 = json.loads(resp2.text)
@@ -69,8 +59,8 @@ class Interactsh:
                 for i in data_list:
                     protocol, decrypt_data = self.DecryptData(aes_key, i)
                     result.append(decrypt_data)
-                    protocol_list.append(protocol)
-            return protocol_list, result
+                    protocol_list.add(protocol)
+            return list(protocol_list), result
         except Exception as e:
             print(e)
             return ""
@@ -85,7 +75,7 @@ class Interactsh:
         cryptor = AES.new(key=aes_plain_key, mode=AES.MODE_CFB, IV=iv, segment_size=128)
         plain_text = cryptor.decrypt(decode)
         protocol = json.loads(plain_text[16:])["protocol"]
-        return protocol, plain_text[16:]
+        return protocol, json.loads(plain_text[16:])
 
     def GetDomain(self):
         domain = self.correlation_id
