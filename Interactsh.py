@@ -43,7 +43,6 @@ class Interactsh:
         try:
             resp = requests.post("https://interactsh.com/register", headers=self.headers, data=json.dumps(data))
         except Exception as e:
-            print(e)
             return "error"
 
     def Poll(self):
@@ -62,7 +61,6 @@ class Interactsh:
                     protocol_list.add(protocol)
             return list(protocol_list), result
         except Exception as e:
-            print(e)
             return ""
 
     def DecryptData(self, aes_key, data):
@@ -83,3 +81,20 @@ class Interactsh:
             domain += chr(ord('a') + random.randint(1, 24))
         domain += ".interactsh.com"
         return domain
+
+    def Verify(self):
+        result = self.Poll()
+        if result:
+            return True
+        else:
+            return False
+
+
+Interactsh = Interactsh()
+
+
+if __name__ == "__main__":
+    Interactsh = Interactsh()
+    domain = Interactsh.GetDomain()
+    requests.get("http://" + domain, timeout=3)
+    print(Interactsh.Poll())
