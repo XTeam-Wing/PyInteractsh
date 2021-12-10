@@ -83,9 +83,9 @@ class Interactsh:
         return domain
 
     def Verify(self):
-        result = self.Poll()
-        if result:
-            return True
+        a,b = self.Poll()
+        if b:
+            return b
         else:
             return False
 
